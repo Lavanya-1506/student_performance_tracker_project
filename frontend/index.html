@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Analyzer | Smart Education Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .form-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .form-title {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-group label i {
+            margin-right: 8px;
+            color: #667eea;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            width: 100%;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .result-section {
+            padding: 30px;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .score-number {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .grade {
+            font-size: 2rem;
+            font-weight: bold;
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .suggestions-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .suggestion-item:hover {
+            transform: translateX(5px);
+        }
+
+        .priority-high {
+            border-left-color: #dc3545;
+        }
+
+        .priority-medium {
+            border-left-color: #ffc107;
+        }
+
+        .priority-low {
+            border-left-color: #28a745;
+        }
+
+        .charts-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-section, .result-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-graduation-cap"></i> Student Performance Analyzer</h1>
+            <p>Predict student performance and get personalized improvement suggestions</p>
+        </div>
+
+        <div class="main-card">
+            <div class="row g-0">
+                <div class="col-md-6">
+                    <div class="form-section">
+                        <h3 class="form-title"><i class="fas fa-chalkboard-user"></i> Student Information</h3>
+                        <form id="predictionForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-book"></i> Study Hours/Day</label>
+                                        <input type="number" class="form-control" id="study_hours" step="0.5" min="0" max="15" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-calendar-check"></i> Attendance (%)</label>
+                                        <input type="number" class="form-control" id="attendance" step="1" min="0" max="100" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-chart-line"></i> Previous Marks (%)</label>
+                                        <input type="number" class="form-control" id="previous_marks" step="1" min="0" max="100" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-tasks"></i> Assignment Completion (%)</label>
+                                        <input type="number" class="form-control" id="assignment_completion" step="1" min="0" max="100" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-bed"></i> Sleep Hours/Day</label>
+                                        <input type="number" class="form-control" id="sleep_hours" step="0.5" min="0" max="12" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-globe"></i> Internet Usage (hours/day)</label>
+                                        <input type="number" class="form-control" id="internet_usage" step="0.5" min="0" max="15" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-users"></i> Participation Level</label>
+                                        <select class="form-select" id="participation" required>
+                                            <option value="0">None</option>
+                                            <option value="1">Low</option>
+                                            <option value="2">Medium</option>
+                                            <option value="3">High</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-user-graduate"></i> Parent Education</label>
+                                        <select class="form-select" id="parent_education" required>
+                                            <option value="0">None</option>
+                                            <option value="1">High School</option>
+                                            <option value="2">Bachelor's</option>
+                                            <option value="3">Master's/PhD</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="predict-btn">
+                                <i class="fas fa-chart-simple"></i> Predict Performance
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="result-section">
+                        <div id="loading" class="loading">
+                            <div class="spinner"></div>
+                            <p class="mt-2">Analyzing student data...</p>
+                        </div>
+                        
+                        <div id="results" style="display: none;">
+                            <div class="score-card">
+                                <h4>Predicted Performance Score</h4>
+                                <div class="score-number" id="predictedScore">0</div>
+                                <div class="grade" id="predictedGrade">-</div>
+                                <p id="gradeMessage" class="mt-2"></p>
+                            </div>
+
+                            <h5><i class="fas fa-lightbulb"></i> Personalized Suggestions</h5>
+                            <div id="suggestionsList" class="suggestions-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <h3 class="mb-3"><i class="fas fa-chart-line"></i> Performance Analytics</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="gradeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="chart-container">
+                            <canvas id="correlationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        let performanceChart, gradeChart, correlationChart;
+
+        // Fetch and display statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/performance_stats');
+                const stats = await response.json();
+                
+                if (performanceChart) performanceChart.destroy();
+                if (gradeChart) gradeChart.destroy();
+                if (correlationChart) correlationChart.destroy();
+
+                // Performance distribution (mock data - in production, this would come from actual data)
+                const ctx1 = document.getElementById('performanceChart').getContext('2d');
+                performanceChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: ['Study Hours', 'Attendance', 'Previous Marks', 'Assignments', 'Sleep', 'Participation'],
+                        datasets: [{
+                            label: 'Impact on Performance',
+                            data: [25, 20, 30, 15, 10, 5],
+                            backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 2,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'Feature Impact Analysis' }
+                        }
+                    }
+                });
+
+                // Grade distribution
+                const ctx2 = document.getElementById('gradeChart').getContext('2d');
+                gradeChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['A', 'B', 'C', 'D', 'F'],
+                        datasets: [{
+                            label: 'Number of Students',
+                            data: [150, 250, 300, 200, 100],
+                            backgroundColor: 'rgba(118, 75, 162, 0.7)',
+                            borderColor: 'rgba(118, 75, 162, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'Grade Distribution' }
+                        }
+                    }
+                });
+
+                // Correlation heatmap representation
+                const ctx3 = document.getElementById('correlationChart').getContext('2d');
+                correlationChart = new Chart(ctx3, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Study Hours', 'Attendance', 'Previous Marks', 'Assignments', 'Sleep', 'Internet Usage'],
+                        datasets: [{
+                            label: 'Correlation with Performance',
+                            data: [0.85, 0.75, 0.90, 0.70, 0.45, -0.60],
+                            backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(102, 126, 234, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'Feature Correlation Radar' }
+                        },
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 1,
+                                ticks: { stepSize: 0.2 }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            
+            // Collect form data
+            const formData = {
+                study_hours: parseFloat(document.getElementById('study_hours').value),
+                attendance: parseFloat(document.getElementById('attendance').value),
+                previous_marks: parseFloat(document.getElementById('previous_marks').value),
+                assignment_completion: parseFloat(document.getElementById('assignment_completion').value),
+                sleep_hours: parseFloat(document.getElementById('sleep_hours').value),
+                internet_usage: parseFloat(document.getElementById('internet_usage').value),
+                participation: parseInt(document.getElementById('participation').value),
+                parent_education: parseInt(document.getElementById('parent_education').value)
+            };
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Display results
+                    document.getElementById('predictedScore').textContent = result.predicted_score.toFixed(1);
+                    document.getElementById('predictedGrade').textContent = result.grade;
+                    document.getElementById('gradeMessage').textContent = result.grade_message;
+                    
+                    // Display suggestions
+                    const suggestionsHtml = result.suggestions.map(suggestion => `
+                        <div class="suggestion-item priority-${suggestion.priority.toLowerCase()}">
+                            <strong><i class="fas fa-arrow-right"></i> ${suggestion.category}</strong><br>
+                            ${suggestion.suggestion}<br>
+                            <small class="text-muted">Impact: ${suggestion.impact}</small>
+                            <span class="badge bg-${suggestion.priority === 'High' ? 'danger' : suggestion.priority === 'Medium' ? 'warning' : 'success'} float-end">${suggestion.priority} Priority</span>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('suggestionsList').innerHTML = suggestionsHtml;
+                    
+                    // Hide loading, show results
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('results').style.display = 'block';
+                    
+                    // Save student record
+                    await fetch('/api/save_student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({...formData, predicted_score: result.predicted_score, grade: result.grade})
+                    });
+                    
+                    // Add animation
+                    document.getElementById('results').style.animation = 'fadeInUp 0.5s ease';
+                } else {
+                    alert('Error: ' + result.error);
+                    document.getElementById('loading').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to get prediction. Please try again.');
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+        
+        // Load sample data for demo
+        function loadSampleData() {
+            document.getElementById('study_hours').value = 6;
+            document.getElementById('attendance').value = 85;
+            document.getElementById('previous_marks').value = 75;
+            document.getElementById('assignment_completion').value = 80;
+            document.getElementById('sleep_hours').value = 7;
+            document.getElementById('internet_usage').value = 4;
+            document.getElementById('participation').value = 2;
+            document.getElementById('parent_education').value = 2;
+        }
+        
+        // Initialize
+        loadStatistics();
+        loadSampleData();
+        
+        // Add input validation
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                let value = parseFloat(input.value);
+                const min = parseFloat(input.min);
+                const max = parseFloat(input.max);
+                
+                if (value < min) input.value = min;
+                if (value > max) input.value = max;
+            });
+        });
+    </script>
+</body>
+</html>
