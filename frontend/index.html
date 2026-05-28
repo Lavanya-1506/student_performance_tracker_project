@@ -143,6 +143,38 @@
             overflow-y: auto;
         }
 
+        .students-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .student-match-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 12px 15px;
+            border-radius: 10px;
+        }
+
+        .student-match-name {
+            font-weight: 700;
+            color: #222;
+        }
+
+        .student-match-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .student-match-score {
+            min-width: 78px;
+            text-align: center;
+        }
+
         .suggestion-item {
             background: #f8f9fa;
             border-left: 4px solid #667eea;
@@ -179,6 +211,32 @@
             border-radius: 15px;
             margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chart-container canvas {
+            width: 100% !important;
+        }
+
+        .feature-chart {
+            margin-top: 24px;
+        }
+
+        .feature-chart canvas {
+            height: 240px !important;
+        }
+
+        .analytics-chart canvas {
+            height: 260px !important;
+        }
+
+        .compact-chart {
+            max-width: 360px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .compact-chart canvas {
+            height: 260px !important;
         }
 
         .loading {
@@ -279,12 +337,7 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label><i class="fas fa-bed"></i> Sleep Hours/Day</label>
-                                        <input type="number" class="form-control" id="sleep_hours" step="0.5" min="0" max="12" required>
-                                    </div>
-                                </div>
+                            
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label><i class="fas fa-globe"></i> Internet Usage (hours/day)</label>
@@ -305,23 +358,17 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label><i class="fas fa-user-graduate"></i> Parent Education</label>
-                                        <select class="form-select" id="parent_education" required>
-                                            <option value="0">None</option>
-                                            <option value="1">High School</option>
-                                            <option value="2">Bachelor's</option>
-                                            <option value="3">Master's/PhD</option>
-                                        </select>
-                                    </div>
-                                </div>
+                              
                             </div>
 
                             <button type="submit" class="predict-btn">
                                 <i class="fas fa-chart-simple"></i> Predict Performance
                             </button>
                         </form>
+
+                        <div class="chart-container feature-chart">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -342,6 +389,9 @@
 
                             <h5><i class="fas fa-lightbulb"></i> Personalized Suggestions</h5>
                             <div id="suggestionsList" class="suggestions-list"></div>
+
+                            <h5 class="mt-4"><i class="fas fa-user-graduate"></i> Students in This Performance Range</h5>
+                            <div id="matchingStudentsList" class="students-list"></div>
                         </div>
                     </div>
                 </div>
@@ -351,19 +401,12 @@
                 <h3 class="mb-3"><i class="fas fa-chart-line"></i> Performance Analytics</h3>
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="chart-container">
-                            <canvas id="performanceChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
+                        <div class="chart-container analytics-chart">
                             <canvas id="gradeChart"></canvas>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="chart-container">
+                    <div class="col-md-6">
+                        <div class="chart-container compact-chart">
                             <canvas id="correlationChart"></canvas>
                         </div>
                     </div>
@@ -375,96 +418,178 @@
     <script>
         // Initialize charts
         let performanceChart, gradeChart, correlationChart;
+        let performanceStats = null;
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getCurrentFormData() {
+            return {
+                study_hours: parseFloat(document.getElementById('study_hours').value) || 0,
+                attendance: parseFloat(document.getElementById('attendance').value) || 0,
+                previous_marks: parseFloat(document.getElementById('previous_marks').value) || 0,
+                assignment_completion: parseFloat(document.getElementById('assignment_completion').value) || 0,
+                internet_usage: parseFloat(document.getElementById('internet_usage').value) || 0,
+                participation: parseInt(document.getElementById('participation').value) || 0,
+            };
+        }
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        function getFeatureScores(formData) {
+            return [
+                clamp((formData.study_hours / 10) * 100, 0, 100),
+                clamp(formData.attendance, 0, 100),
+                clamp(formData.previous_marks, 0, 100),
+                clamp(formData.assignment_completion, 0, 100),
+                clamp((formData.participation / 3) * 100, 0, 100),
+                clamp(100 - ((formData.internet_usage / 10) * 100), 0, 100)
+            ];
+        }
+
+        function updateCharts(formData, result = null) {
+            const featureLabels = ['Study Hours', 'Attendance', 'Previous Marks', 'Assignments', 'Participation', 'Internet Usage'];
+            const featureScores = getFeatureScores(formData);
+            const predictedScore = result ? Number(result.predicted_score) : formData.previous_marks;
+            const predictedGrade = result ? result.grade : null;
+
+            if (performanceChart) performanceChart.destroy();
+            if (gradeChart) gradeChart.destroy();
+            if (correlationChart) correlationChart.destroy();
+
+            const ctx1 = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: featureLabels,
+                    datasets: [
+                        {
+                            label: 'Input Strength',
+                            data: featureScores,
+                            backgroundColor: 'rgba(102, 126, 234, 0.18)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.35
+                        },
+                        {
+                            label: 'Predicted Score',
+                            data: featureLabels.map(() => predictedScore),
+                            borderColor: 'rgba(40, 167, 69, 0.95)',
+                            borderDash: [6, 6],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Feature Impact Analysis' }
+                    }
+                }
+            });
+
+            const gradeLabels = ['A+', 'A', 'B', 'C', 'D', 'F'];
+            const gradeDistribution = performanceStats?.grade_distribution || {};
+            const gradeCounts = gradeLabels.map(label => gradeDistribution[label] || 0);
+            const gradeColors = gradeLabels.map(label =>
+                label === predictedGrade || (predictedGrade === 'A' && label === 'A')
+                    ? 'rgba(40, 167, 69, 0.9)'
+                    : 'rgba(118, 75, 162, 0.55)'
+            );
+
+            const ctx2 = document.getElementById('gradeChart').getContext('2d');
+            gradeChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: gradeLabels,
+                    datasets: [
+                        {
+                            label: 'Dataset Students',
+                            data: gradeCounts,
+                            backgroundColor: gradeColors,
+                            borderColor: gradeColors,
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Predicted Student',
+                            data: gradeLabels.map(label => label === predictedGrade ? 1 : 0),
+                            backgroundColor: 'rgba(255, 193, 7, 0.9)',
+                            borderColor: 'rgba(255, 193, 7, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Grade Distribution' }
+                    }
+                }
+            });
+
+            const ctx3 = document.getElementById('correlationChart').getContext('2d');
+            correlationChart = new Chart(ctx3, {
+                type: 'doughnut',
+                data: {
+                    labels: featureLabels,
+                    datasets: [{
+                        label: 'Current Input Profile',
+                        data: featureScores,
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.85)',
+                            'rgba(118, 75, 162, 0.85)',
+                            'rgba(40, 167, 69, 0.85)',
+                            'rgba(255, 193, 7, 0.85)',
+                            'rgba(23, 162, 184, 0.85)',
+                            'rgba(220, 53, 69, 0.85)'
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '58%',
+                    plugins: {
+                        legend: { position: 'right' },
+                        title: { display: true, text: 'Current Input Profile' }
+                    }
+                }
+            });
+        }
 
         // Fetch and display statistics
         async function loadStatistics() {
             try {
                 const response = await fetch('/api/performance_stats');
-                const stats = await response.json();
-                
-                if (performanceChart) performanceChart.destroy();
-                if (gradeChart) gradeChart.destroy();
-                if (correlationChart) correlationChart.destroy();
-
-                // Performance distribution (mock data - in production, this would come from actual data)
-                const ctx1 = document.getElementById('performanceChart').getContext('2d');
-                performanceChart = new Chart(ctx1, {
-                    type: 'line',
-                    data: {
-                        labels: ['Study Hours', 'Attendance', 'Previous Marks', 'Assignments', 'Sleep', 'Participation'],
-                        datasets: [{
-                            label: 'Impact on Performance',
-                            data: [25, 20, 30, 15, 10, 5],
-                            backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            borderWidth: 2,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' },
-                            title: { display: true, text: 'Feature Impact Analysis' }
-                        }
-                    }
-                });
-
-                // Grade distribution
-                const ctx2 = document.getElementById('gradeChart').getContext('2d');
-                gradeChart = new Chart(ctx2, {
-                    type: 'bar',
-                    data: {
-                        labels: ['A', 'B', 'C', 'D', 'F'],
-                        datasets: [{
-                            label: 'Number of Students',
-                            data: [150, 250, 300, 200, 100],
-                            backgroundColor: 'rgba(118, 75, 162, 0.7)',
-                            borderColor: 'rgba(118, 75, 162, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' },
-                            title: { display: true, text: 'Grade Distribution' }
-                        }
-                    }
-                });
-
-                // Correlation heatmap representation
-                const ctx3 = document.getElementById('correlationChart').getContext('2d');
-                correlationChart = new Chart(ctx3, {
-                    type: 'radar',
-                    data: {
-                        labels: ['Study Hours', 'Attendance', 'Previous Marks', 'Assignments', 'Sleep', 'Internet Usage'],
-                        datasets: [{
-                            label: 'Correlation with Performance',
-                            data: [0.85, 0.75, 0.90, 0.70, 0.45, -0.60],
-                            backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            borderWidth: 2,
-                            pointBackgroundColor: 'rgba(102, 126, 234, 1)'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' },
-                            title: { display: true, text: 'Feature Correlation Radar' }
-                        },
-                        scales: {
-                            r: {
-                                beginAtZero: true,
-                                max: 1,
-                                ticks: { stepSize: 0.2 }
-                            }
-                        }
-                    }
-                });
+                performanceStats = await response.json();
+                updateCharts(getCurrentFormData());
             } catch (error) {
                 console.error('Error loading statistics:', error);
+                updateCharts(getCurrentFormData());
             }
         }
 
@@ -477,16 +602,7 @@
             document.getElementById('results').style.display = 'none';
             
             // Collect form data
-            const formData = {
-                study_hours: parseFloat(document.getElementById('study_hours').value),
-                attendance: parseFloat(document.getElementById('attendance').value),
-                previous_marks: parseFloat(document.getElementById('previous_marks').value),
-                assignment_completion: parseFloat(document.getElementById('assignment_completion').value),
-                sleep_hours: parseFloat(document.getElementById('sleep_hours').value),
-                internet_usage: parseFloat(document.getElementById('internet_usage').value),
-                participation: parseInt(document.getElementById('participation').value),
-                parent_education: parseInt(document.getElementById('parent_education').value)
-            };
+            const formData = getCurrentFormData();
             
             try {
                 const response = await fetch('/api/predict', {
@@ -516,6 +632,24 @@
                     `).join('');
                     
                     document.getElementById('suggestionsList').innerHTML = suggestionsHtml;
+
+                    const matchingStudents = result.matching_students || [];
+                    const matchingStudentsHtml = matchingStudents.length
+                        ? matchingStudents.map(student => `
+                            <div class="student-match-item">
+                                <div>
+                                    <div class="student-match-name">${escapeHtml(student.name)}</div>
+                                    <div class="student-match-meta">${escapeHtml(student.student_id)} • Grade ${escapeHtml(student.grade)}</div>
+                                </div>
+                                <div class="student-match-score">
+                                    <span class="badge bg-primary">${Number(student.performance_score).toFixed(1)}</span>
+                                </div>
+                            </div>
+                        `).join('')
+                        : '<div class="text-muted">No students found in this score range.</div>';
+
+                    document.getElementById('matchingStudentsList').innerHTML = matchingStudentsHtml;
+                    updateCharts(formData, result);
                     
                     // Hide loading, show results
                     document.getElementById('loading').style.display = 'none';
@@ -549,15 +683,13 @@
             document.getElementById('attendance').value = 85;
             document.getElementById('previous_marks').value = 75;
             document.getElementById('assignment_completion').value = 80;
-            document.getElementById('sleep_hours').value = 7;
             document.getElementById('internet_usage').value = 4;
             document.getElementById('participation').value = 2;
-            document.getElementById('parent_education').value = 2;
         }
         
         // Initialize
-        loadStatistics();
         loadSampleData();
+        loadStatistics();
         
         // Add input validation
         const inputs = document.querySelectorAll('input[type="number"]');
