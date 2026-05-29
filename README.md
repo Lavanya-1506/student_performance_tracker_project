@@ -262,7 +262,8 @@ Upon successful implementation of the AI Student Performance Tracker, the follow
 # 👨‍💻 Developed By
 
 **Lavanya Vaidya**
-**Domain:** Machine Learning
+
+**Machine Learning Intern** 
 
 ---
 
