@@ -1,15 +1,15 @@
 # Student Performance Tracker Project Report 
 
 # Intern Details
--Intern ID: [CITS2184]
+*Intern ID: [CITS2184]
 
--Full Name: Lavanya Vaidya
+*Full Name: Lavanya Vaidya
 
--No. of Weeks: 4 Weeks
+*No. of Weeks: 4 Weeks
 
--Project Name: AI Student Performance Tracker
+*Project Name: AI Student Performance Tracker
 
--Domain: Machine Learning
+*Domain: Machine Learning
 
 # Project Overview
 A Student Performance Analysis System is a machine learning–based application that analyzes student academic and behavioral data to evaluate, monitor, and predict student performance.
