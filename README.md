@@ -20,9 +20,9 @@ The system evaluates various academic and behavioral factors to identify perform
 
 This project helps:
 
-* 🎓 Students monitor and improve their academic performance
-* 👨‍🏫 Teachers identify students who may need additional support
-* 🏫 Educational institutions make data-driven decisions
+* Students monitor and improve their academic performance
+* Teachers identify students who may need additional support
+* Educational institutions make data-driven decisions
 
 ---
 
@@ -49,16 +49,16 @@ Using these factors, the system can:
 
 # ✨ Key Features
 
-* 📊 Student Performance Prediction
-* 📝 Grade Prediction (A–F)
-* 📈 Performance Tracking and Analysis
-* 🤖 Multiple Machine Learning Models Comparison
-* 💡 Personalized Improvement Recommendations
-* 📉 Exploratory Data Analysis (EDA)
-* 📊 Interactive Data Visualizations
-* ⚡ Real-Time Performance Prediction
-* 🔗 RESTful API Integration
-* 📱 Responsive User Interface
+* Student Performance Prediction
+* Grade Prediction (A–F)
+* Performance Tracking and Analysis
+* Multiple Machine Learning Models Comparison
+* Personalized Improvement Recommendations
+* Exploratory Data Analysis (EDA)
+* Interactive Data Visualizations
+* Real-Time Performance Prediction
+* RESTful API Integration
+* Responsive User Interface
 
 ---
 
@@ -244,3 +244,27 @@ python backend/app.py
 Open your browser and navigate to:
 
 http://localhost:5000
+
+# 🎯 Project Outcomes
+
+Upon successful implementation of the AI Student Performance Tracker, the following outcomes were achieved:
+
+* Developed a machine learning model capable of predicting student performance scores.
+* Identified key factors influencing academic performance, such as attendance, study hours, and assignment completion.
+* Generated personalized recommendations to help students improve their academic outcomes.
+* Visualized student performance trends through interactive charts and analytics.
+* Compared multiple machine learning algorithms and selected the best-performing model.
+* Automated the process of performance analysis and prediction.
+* Created a scalable system that can be integrated into educational institutions for student monitoring and academic planning.
+
+---
+
+# 👨‍💻 Developed By
+
+**Lavanya Vaidya**
+**Domain:** Machine Learning
+
+---
+
+
+
