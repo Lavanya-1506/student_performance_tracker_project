@@ -2,9 +2,13 @@
 
 # Intern Details
 -Intern ID: [CITS2184]
+
 -Full Name: Lavanya Vaidya
+
 -No. of Weeks: 4 Weeks
+
 -Project Name: AI Student Performance Tracker
+
 -Domain: Machine Learning
 
 # Project Overview
