@@ -1,15 +1,15 @@
 # Student Performance Tracker Project Report 
 
 # Intern Details
-*Intern ID: [CITS2184]
+Intern ID: [CITS2184]
 
-*Full Name: Lavanya Vaidya
+Full Name: Lavanya Vaidya
 
-*No. of Weeks: 4 Weeks
+No. of Weeks: 4 Weeks
 
-*Project Name: AI Student Performance Tracker
+Project Name: AI Student Performance Tracker
 
-*Domain: Machine Learning
+Domain: Machine Learning
 
 # Project Overview
 A Student Performance Analysis System is a machine learning–based application that analyzes student academic and behavioral data to evaluate, monitor, and predict student performance.
@@ -46,32 +46,145 @@ Using this data, the system:
 -Provides improvement suggestions
 
 
-# Key Features
--Student Performance Prediction using Machine Learning
+## Features
 
--Grade Prediction (A, B, C, D, F)
+- **Predictive Analytics**: Predict student performance scores (0-100) and grades (A-F)
+- **Personalized Suggestions**: Get actionable recommendations based on individual student data
+- **Interactive Dashboard**: Real-time visualizations and analytics
+- **Multiple ML Models**: Linear Regression, Decision Tree, Random Forest, XGBoost
+- **RESTful API**: Easy integration with other systems
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
 
--erformance Tracking and Analysis
 
--Multi-Factor Analysis (Study Hours, Attendance, Marks, Assignments, etc.)
+## 📊 Factors Considered
 
--Data Preprocessing (Missing Values, Duplicates, Encoding, Scaling)
+- Study hours per day
+- Attendance percentage
+- Previous marks
+- Assignment completion rate
+- Sleep hours
+- Participation in activities
+- Internet usage
+- Parent education level
 
--Exploratory Data Analysis (EDA) with Visualizations
+# System Architecture
 
--Multiple ML Models Comparison
+┌─────────────────────────────────────────────────────────────────┐
+│                    STUDENT PERFORMANCE ANALYZER                  │
+│                        SYSTEM ARCHITECTURE                       │
+└─────────────────────────────────────────────────────────────────┘
 
--Personalized Improvement Recommendations
+                              ┌─────────────┐
+                              │   USER      │
+                              │ (Student/   │
+                              │  Teacher)   │
+                              └──────┬──────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         FRONTEND (Browser)                      │
+├─────────────────────────────────────────────────────────────────┤
+│  • Input Form (8 parameters)                                    │
+│  • Submit Button                                                │
+│  • Results Display                                              │
+│  • Charts & Visualizations                                      │
+│  • Suggestions Section                                          │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ HTTP POST/GET
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     BACKEND API (Flask)                         │
+├─────────────────────────────────────────────────────────────────┤
+│  Endpoints:                                                     │
+│  • /api/predict - POST predictions                              │
+│  • /api/analysis - GET analysis report                          │
+│  • /api/save_student - POST save records                        │
+│  • /api/performance_stats - GET statistics                      │
+└────────────┬──────────────────────────────────┬────────────────┘
+             │                                  │
+             ▼                                  ▼
+┌────────────────────────┐        ┌────────────────────────────┐
+│   ML MODEL PREDICTION  │        │   DATA PROCESSING          │
+├────────────────────────┤        ├────────────────────────────┤
+│ 1. Load trained model  │        │ 1. Validate input          │
+│ 2. Scale features      │        │ 2. Format data             │
+│ 3. Predict score       │        │ 3. Generate suggestions    │
+│ 4. Determine grade     │        │ 4. Prepare response        │
+└────────────┬───────────┘        └────────────┬───────────────┘
+             │                                 │
+             └──────────────┬──────────────────┘
+                            ▼
+              ┌─────────────────────────┐
+              │   RESPONSE TO FRONTEND  │
+              ├─────────────────────────┤
+              │ • Predicted Score       │
+              │ • Grade (A-F)           │
+              │ • Suggestions (Array)   │
+              │ • Analysis Data         │
+              └─────────────────────────┘
 
--Interactive Charts and Performance Reports
+┌─────────────────────────────────────────────────────────────────┐
+│                    DATA FLOW DIAGRAM                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Raw Data ──► Preprocessing ──► EDA ──► Model Training          │
+│     │              │              │             │               │
+│     ▼              ▼              ▼             ▼               │
+│  CSV File     Clean Data      Visuals      Trained Model        │
+│                                                      │          │
+│                                                      ▼          │
+│  User Input ──────────────────────────────► Prediction          │
+│      │                                              │           │
+│      ▼                                              ▼           │
+│  Validate                                        Result         │
+│      │                                              │           │
+│      ▼                                              ▼           │
+│  Transform                                   Suggestions        │
+│                                                   │             │
+│                                                   ▼             │
+│                                              Final Output       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
--Model Saving and Reusability
+┌─────────────────────────────────────────────────────────────────┐
+│                    MODEL PIPELINE                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Input Features (8)                                             │
+│       │                                                         │
+│       ▼                                                         │
+│  StandardScaler ──────────────────────────────┐                 │
+│       │                                        │                │
+│       ├──► Linear Regression ────┐            │                 │
+│       ├──► Decision Tree ────────┤            │                 │
+│       ├──► Random Forest ────────┼──► Compare ──► Best Model    │
+│       └──► XGBoost ──────────────┘            │                 │
+│                                                ▼                │
+│                                           Save Model            │
+│                                                │                │
+│                                                ▼                │
+│  New Student Data ──────────────────────► Prediction            │
+│                                                │                │
+│                                                ▼                │
+│                                      Performance Score + Grade  │
+│                                                │                │
+│                                                ▼                │
+│                                      Recommendation Engine      │
+│                                                │                │
+│                                                ▼                │
+│                                          Suggestions            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
--CSV Dataset Support
+# Tech Stack
 
--Real-Time Performance Prediction
+**Frontend** | HTML5 | CSS3 | JavaScript | User interface |
+**Styling** | Bootstrap 5 | Responsive design |
+**Visualization** | Chart.js | Interactive charts |
+**Backend** | Flask (Python) | API server |
+**ML Framework** | Scikit-learn | Model training |
+**Boosting** | XGBoost | Advanced predictions |
+**Data Processing** | Pandas, NumPy | Data manipulation |
+**Model Serialization** | Joblib | Save/load models |
 
--Model Evaluation using MAE, MSE, RMSE, and R² Score
-
--Data-Driven Insights for Students and Educators
 
